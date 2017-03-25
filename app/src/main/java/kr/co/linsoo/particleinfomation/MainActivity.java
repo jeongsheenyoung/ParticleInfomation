@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "새로 고침중...", Snackbar.LENGTH_LONG).setAction("Action", null).show();
+//                Snackbar.make(view, "새로 고침중...", Snackbar.LENGTH_LONG).setAction("Action", null).show();
                 refreshData();
             }
         });
@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public class SectionsPagerAdapter extends FragmentStatePagerAdapter  {
+    private class SectionsPagerAdapter extends FragmentStatePagerAdapter  {
         public SectionsPagerAdapter(FragmentManager fm) {
             super(fm);
         }
@@ -106,7 +106,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public int getCount() {
             // Show 3 total pages.
-            return 3;
+            return 1;
         }
 
         @Override

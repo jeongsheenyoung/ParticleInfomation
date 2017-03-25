@@ -42,6 +42,7 @@ public class linsooLocationMNG {
     }
 
     public void StartFindLocation(){
+        Log.d("linsoo","StartFindLocation");
         try{
             m_localMNG.requestLocationUpdates(LocationManager.GPS_PROVIDER, // 등록할 위치제공자
                     100, // 통지사이의 최소 시간간격 (miliSecond)
@@ -57,10 +58,22 @@ public class linsooLocationMNG {
         }
     }
 
+    public void test(){
+        String locationProvider = LocationManager.GPS_PROVIDER;
+        Location lastKnownLocation = m_localMNG.getLastKnownLocation(locationProvider);
+        if (lastKnownLocation != null) {
+            double lng = lastKnownLocation.getLatitude();
+            double lat = lastKnownLocation.getLatitude();
+            Log.d("linsoo", "longtitude=" + lng + ", latitude=" + lat);
+        }
+    }
+
+
     //---------------------------------------------------------------------------------
     //http://javaexpert.tistory.com/142 경위도 tm 변환 소스
     //위치로 주소 가져오기
     public String getAddress(double lat, double lng){
+        Log.d("linsoo","getAddress");
         String address = null;
 
         //주소 목록을 담기 위한 HashMap
@@ -87,6 +100,8 @@ public class linsooLocationMNG {
     private final LocationListener mLocationListener = new LocationListener() {
         public void onLocationChanged(Location location) {
             //위치값이 갱신되면 이벤트가 발생.
+            Log.d("linsoo","onLocationChanged");
+
             double longitude = location.getLongitude(); //경도
             double latitude = location.getLatitude();   //위도
             String address = getAddress(latitude, longitude);

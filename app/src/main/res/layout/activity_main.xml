@@ -39,6 +39,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="end|bottom"
         android:layout_margin="@dimen/fab_margin"
-        android:background="@drawable/abc_btn_radio_to_on_mtrl_015" />
+        android:background="@android:drawable/ic_popup_sync"
+        app:backgroundTint="@color/accent_material_light" />
 
 </android.support.design.widget.CoordinatorLayout>

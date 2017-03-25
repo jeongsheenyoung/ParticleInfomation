@@ -9,21 +9,18 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 
-/**
- * Created by linsoo on 2017-03-24.
- */
-
 
 
 public class OpenAPIQuery {
-    final String strServiceKey = "";
+    private final String strServiceKey = "여기에 공공데이터 포털에서 받은 인증키를 넣어주세요";
 
-    final int QueryTypeNONE                             = 0;
-    final int QueryTypeGetStationNamefromTM         = 1;
-    final int QueryTypeGetAirDatafromStationName        = 2;
+    private final int QueryTypeNONE = 0;
+    private final int QueryTypeGetStationNamefromTM = 1;
+    private final int QueryTypeGetAirDatafromStationName = 2;
 
-    int m_iQueryType =QueryTypeNONE;
-    resultCallback m_callback = null;
+    private int m_iQueryType =QueryTypeNONE;
+    private resultCallback m_callback = null;
+
     interface resultCallback { // 인터페이스는 외부에 구현해도 상관 없습니다.
         void callbackGetAirDatafromStationName(String result);
         void callbackGetStationNamefromTM(String result);
