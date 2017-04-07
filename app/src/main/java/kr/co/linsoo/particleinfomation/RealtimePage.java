@@ -17,10 +17,6 @@ import org.xmlpull.v1.XmlPullParserFactory;
 import java.io.StringReader;
 
 
-/**
- * Created by linsoo on 2017-03-24.
- */
-
 public class RealtimePage extends Fragment {
     final int PARSE_STATE_NOT_FOUND = 0;
     final int PARSE_STATE_FOUND = 1;
@@ -54,7 +50,13 @@ public class RealtimePage extends Fragment {
         refreshData();
     }
 
-
+    static RealtimePage newInstance(int position) {
+        RealtimePage f = new RealtimePage();	//객체 생성
+        Bundle args = new Bundle();					//해당 fragment에서 사용될 정보 담을 번들 객체
+        args.putInt("position", position);				//포지션 값을 저장
+        f.setArguments(args);							//fragment에 정보 전달.
+        return f;											//fragment 반환
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -68,7 +70,6 @@ public class RealtimePage extends Fragment {
         }
 
 
-        //   mPosition = getArguments() != null ? getArguments().getInt("position") : 0;	// 뷰페이저의 position값을  넘겨 받음
         llMng = new linsooLocationMNG(getActivity(), new linsooLocationMNG.resultCallback() {
             @Override
             public void callbackMethod(double latitude, double longitude, String address) {
@@ -81,6 +82,7 @@ public class RealtimePage extends Fragment {
                 in_pt.y = latitude;     //위도
                 tm_pt = GeoTrans.convert(GeoTrans.GEO, GeoTrans.TM, in_pt);
 
+                m_TextViewLog.setText("longitude="+longitude+" latitude="+latitude+"\nAddress = "+address+"\n공공데이터 포털에서 미세먼지 데이터를 요청합니다");
                 openApi.queryGetStationNamefromTM(tm_pt.x, tm_pt.y);
             }
         });
@@ -101,7 +103,48 @@ public class RealtimePage extends Fragment {
                 xmlParseGetStationNamefromTM(result);
             }
         });
+    }
+//------------------------------------------------------------------------------------
 
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View rootView = inflater.inflate(R.layout.fragment_main, container, false);
+        m_TextViewLog = (TextView) rootView.findViewById(R.id.textViewLog);
+        m_TextViewLog.setMovementMethod(new ScrollingMovementMethod());
+
+        m_TextViewAddress =  (TextView) rootView.findViewById(R.id.textView_Address);
+        m_TextViewStationName=  (TextView) rootView.findViewById(R.id.textView_StationName);
+
+        m_TextViewDataTime=  (TextView) rootView.findViewById(R.id.textView_dataTime);
+        m_TextViewPM25=  (TextView) rootView.findViewById(R.id.textView_pm25);
+        m_TextViewPM25_24=  (TextView) rootView.findViewById(R.id.textView_pm25_24);
+        m_TextViewPM10=  (TextView) rootView.findViewById(R.id.textView_pm10);
+        m_TextViewPM10_24=  (TextView) rootView.findViewById(R.id.textView_pm10_24);
+
+        return rootView;
+    }
+
+    public void refreshData(){
+        Log.d("linsoo", "refreshData");
+        m_TextViewLog.setText("현위치 검색중...");
+        m_TextViewAddress.setText("");
+        m_TextViewStationName.setText("");
+        m_TextViewDataTime.setText("");
+        m_TextViewPM25.setText("");
+        m_TextViewPM25.setBackgroundColor(Color.rgb(255,255,255));
+        m_TextViewPM25_24.setText("");
+        m_TextViewPM25_24.setBackgroundColor(Color.rgb(255,255,255));
+        m_TextViewPM10.setText("");
+        m_TextViewPM10.setBackgroundColor(Color.rgb(255,255,255));
+        m_TextViewPM10_24.setText("");
+        m_TextViewPM10_24.setBackgroundColor(Color.rgb(255,255,255));
+
+        try{
+            openApi.StopQuery();
+            llMng.EndFindLocation();
+            llMng.StartFindLocation();
+
+        }catch (Exception e){ Log.e("linsoo", "refreshData="+e.getMessage());      }
     }
 
 
@@ -216,62 +259,5 @@ public class RealtimePage extends Fragment {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-
-
-    static RealtimePage newInstance(int position) {
-        RealtimePage f = new RealtimePage();	//객체 생성
-        Bundle args = new Bundle();					//해당 fragment에서 사용될 정보 담을 번들 객체
-        args.putInt("position", position);				//포지션 값을 저장
-        f.setArguments(args);							//fragment에 정보 전달.
-        return f;											//fragment 반환
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-        m_TextViewLog = (TextView) rootView.findViewById(R.id.textViewLog);
-        m_TextViewLog.setMovementMethod(new ScrollingMovementMethod());
-
-
-
-        m_TextViewAddress =  (TextView) rootView.findViewById(R.id.textView_Address);
-        m_TextViewStationName=  (TextView) rootView.findViewById(R.id.textView_StationName);
-
-        m_TextViewDataTime=  (TextView) rootView.findViewById(R.id.textView_dataTime);
-        m_TextViewPM25=  (TextView) rootView.findViewById(R.id.textView_pm25);
-        m_TextViewPM25_24=  (TextView) rootView.findViewById(R.id.textView_pm25_24);
-        m_TextViewPM10=  (TextView) rootView.findViewById(R.id.textView_pm10);
-        m_TextViewPM10_24=  (TextView) rootView.findViewById(R.id.textView_pm10_24);
-
-
-
-
-        return rootView;
-    }
-
-    public void refreshData(){
-        Log.d("linsoo", "refreshData");
-        m_TextViewLog.setText("현위치 검색중...");
-        m_TextViewAddress.setText("");
-        m_TextViewStationName.setText("");
-        m_TextViewDataTime.setText("");
-        m_TextViewPM25.setText("");
-        m_TextViewPM25.setBackgroundColor(Color.rgb(255,255,255));
-        m_TextViewPM25_24.setText("");
-        m_TextViewPM25_24.setBackgroundColor(Color.rgb(255,255,255));
-        m_TextViewPM10.setText("");
-        m_TextViewPM10.setBackgroundColor(Color.rgb(255,255,255));
-        m_TextViewPM10_24.setText("");
-        m_TextViewPM10_24.setBackgroundColor(Color.rgb(255,255,255));
-
-
-        try{
-
-            llMng.EndFindLocation();
-            llMng.StartFindLocation();
-
-        }catch (Exception e){ Log.e("linsoo", "refreshData="+e.getMessage());      }
     }
 }

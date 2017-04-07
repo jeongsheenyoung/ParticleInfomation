@@ -12,7 +12,7 @@ import java.net.URLEncoder;
 
 
 public class OpenAPIQuery {
-    private final String strServiceKey = "여기에 공공데이터 포털에서 받은 인증키를 넣어주세요";
+    private final String strServiceKey = "여기에 공공데이터 포털 인증키를 입력하세요";
 
     private final int QueryTypeNONE = 0;
     private final int QueryTypeGetStationNamefromTM = 1;
@@ -21,6 +21,8 @@ public class OpenAPIQuery {
     private int m_iQueryType =QueryTypeNONE;
     private resultCallback m_callback = null;
 
+    private OpenAPIThreadTask mThreadAPI = null;
+
     interface resultCallback { // 인터페이스는 외부에 구현해도 상관 없습니다.
         void callbackGetAirDatafromStationName(String result);
         void callbackGetStationNamefromTM(String result);
@@ -28,6 +30,14 @@ public class OpenAPIQuery {
 
     public OpenAPIQuery( resultCallback callback){
         m_callback = callback;
+    }
+
+    public void StopQuery(){
+        Log.d("linsoo", "queryThreadStop");
+        if(mThreadAPI !=null){
+            mThreadAPI.cancel(true);
+            mThreadAPI = null;
+        }
 
     }
 
@@ -41,7 +51,13 @@ public class OpenAPIQuery {
             urlBuilder.append("&" + URLEncoder.encode("pageNo","UTF-8") + "=" + URLEncoder.encode("1", "UTF-8"));
             urlBuilder.append("&" + URLEncoder.encode("numOfRows","UTF-8") + "=" + URLEncoder.encode("10", "UTF-8"));
 
-            new OpenAPIThreadTask().execute(urlBuilder.toString(),null,null);
+            //new OpenAPIThreadTask().execute(urlBuilder.toString(),null,null);
+
+            if(mThreadAPI == null){
+                mThreadAPI = new OpenAPIThreadTask();
+                mThreadAPI.execute(urlBuilder.toString(),null,null);
+            }
+
         }catch (Exception e){ Log.e("linsoo", "queryGetStationNamefromTM="+e.getMessage());}
     }
 
@@ -56,7 +72,12 @@ public class OpenAPIQuery {
             urlBuilder.append("&" + URLEncoder.encode("numOfRows","UTF-8") + "=" + URLEncoder.encode("10", "UTF-8"));
             urlBuilder.append("&" + URLEncoder.encode("ver","UTF-8") + "=" + URLEncoder.encode("1.1", "UTF-8"));
 
-            new OpenAPIThreadTask().execute(urlBuilder.toString(),null,null);
+            //new OpenAPIThreadTask().execute(urlBuilder.toString(),null,null);
+            if(mThreadAPI == null){
+                mThreadAPI = new OpenAPIThreadTask();
+                mThreadAPI.execute(urlBuilder.toString(),null,null);
+            }
+
         }catch (Exception e){ Log.e("linsoo", "queryGetAirDatafromStationName="+e.getMessage());}
     }
 
@@ -93,6 +114,7 @@ public class OpenAPIQuery {
 
         @Override
         protected void onPostExecute(String result) {
+            mThreadAPI = null;
             if(result != null) {
                 if (m_callback != null){
                     switch (m_iQueryType){

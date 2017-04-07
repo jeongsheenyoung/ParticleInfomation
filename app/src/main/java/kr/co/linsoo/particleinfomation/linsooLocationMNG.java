@@ -12,9 +12,6 @@ import android.util.Log;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * Created by linsoo on 2017-03-24.
- */
 
 public class linsooLocationMNG {
 
@@ -58,17 +55,6 @@ public class linsooLocationMNG {
         }
     }
 
-    public void test(){
-        String locationProvider = LocationManager.GPS_PROVIDER;
-        Location lastKnownLocation = m_localMNG.getLastKnownLocation(locationProvider);
-        if (lastKnownLocation != null) {
-            double lng = lastKnownLocation.getLatitude();
-            double lat = lastKnownLocation.getLatitude();
-            Log.d("linsoo", "longtitude=" + lng + ", latitude=" + lat);
-        }
-    }
-
-
     //---------------------------------------------------------------------------------
     //http://javaexpert.tistory.com/142 경위도 tm 변환 소스
     //위치로 주소 가져오기
@@ -94,7 +80,6 @@ public class linsooLocationMNG {
         }
         return null;
     }
-    //---------------------------------------------------------------------------------
 
     //---------------------------------------------------------------------------------
     private final LocationListener mLocationListener = new LocationListener() {
