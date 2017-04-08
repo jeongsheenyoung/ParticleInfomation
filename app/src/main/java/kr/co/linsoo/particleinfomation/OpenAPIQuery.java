@@ -2,17 +2,15 @@ package kr.co.linsoo.particleinfomation;
 
 import android.os.AsyncTask;
 import android.util.Log;
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 
-
-
 public class OpenAPIQuery {
     private final String strServiceKey = "여기에 공공데이터 포털 인증키를 입력하세요";
+
 
     private final int QueryTypeNONE = 0;
     private final int QueryTypeGetStationNamefromTM = 1;
