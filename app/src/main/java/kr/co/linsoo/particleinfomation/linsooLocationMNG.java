@@ -60,7 +60,6 @@ public class linsooLocationMNG {
     //위치로 주소 가져오기
     public String getAddress(double lat, double lng){
         Log.d("linsoo","getAddress");
-        String address = null;
 
         //주소 목록을 담기 위한 HashMap
         List<Address> list = null;
@@ -72,7 +71,7 @@ public class linsooLocationMNG {
 
         if(list == null){
             Log.e("linsoo", "주소 데이터 얻기 실패");
-            return "주소를 구할수 없었습니다.";
+            return null;
         }
 
         if(list.size() > 0){
@@ -86,6 +85,7 @@ public class linsooLocationMNG {
         public void onLocationChanged(Location location) {
             //위치값이 갱신되면 이벤트가 발생.
             Log.d("linsoo","onLocationChanged");
+            EndFindLocation();
 
             double longitude = location.getLongitude(); //경도
             double latitude = location.getLatitude();   //위도

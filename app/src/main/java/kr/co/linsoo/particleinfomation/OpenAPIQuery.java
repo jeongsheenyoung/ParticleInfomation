@@ -26,6 +26,7 @@ public class OpenAPIQuery {
     interface resultCallback { // 인터페이스는 외부에 구현해도 상관 없습니다.
         void callbackGetAirDatafromStationName(String result);
         void callbackGetStationNamefromTM(String result);
+        void callbackError(String errReport);
     }
 
     public OpenAPIQuery( resultCallback callback){
@@ -108,6 +109,9 @@ public class OpenAPIQuery {
 
             }catch (Exception e){
                 Log.e("linsoo", "error="+e.getMessage());
+                if (m_callback != null){
+                    m_callback.callbackError(e.getMessage());
+                }
             }
             return null;
         }

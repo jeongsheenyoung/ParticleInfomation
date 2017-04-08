@@ -211,8 +211,9 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_margin="1dp"
-            android:scrollbars="vertical"
             android:background="#ffffff"
+            android:padding="5dp"
+            android:scrollbars="vertical"
             android:text="TextView" />
 
         <TextView

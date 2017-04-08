@@ -1,9 +1,16 @@
 package kr.co.linsoo.particleinfomation;
 
+import android.content.Context;
 import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.text.Html;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
 import android.text.method.ScrollingMovementMethod;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -37,6 +44,8 @@ public class RealtimePage extends Fragment {
 
     XmlPullParserFactory factory= null;
     XmlPullParser xpp= null;
+    ConnectivityManager m_connectMNG = null;
+    private  String m_strLogText;
 
     @Override
     public void onPause(){
@@ -69,21 +78,32 @@ public class RealtimePage extends Fragment {
             e.printStackTrace();
         }
 
+        m_connectMNG = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+
 
         llMng = new linsooLocationMNG(getActivity(), new linsooLocationMNG.resultCallback() {
             @Override
             public void callbackMethod(double latitude, double longitude, String address) {
-
                 Log.d("linsoo","callbackMethod");
-                llMng.EndFindLocation();
-                m_TextViewAddress.setText(address);
 
                 in_pt.x = longitude;    //경도
                 in_pt.y = latitude;     //위도
                 tm_pt = GeoTrans.convert(GeoTrans.GEO, GeoTrans.TM, in_pt);
 
-                m_TextViewLog.setText("longitude="+longitude+" latitude="+latitude+"\nAddress = "+address+"\n공공데이터 포털에서 미세먼지 데이터를 요청합니다");
-                openApi.queryGetStationNamefromTM(tm_pt.x, tm_pt.y);
+                addLogText(("longitude="+longitude+" latitude="+latitude));
+
+                int textColor = Color.BLACK;
+                if(address == null){
+                    address = "주소를 구할수 없었습니다.";
+                    textColor = Color.RED;
+                }
+                m_TextViewAddress.setText(address);
+                addLogText( ("Address="+address) ,textColor);
+
+                addLogText("공공데이터 포털에서 미세먼지 데이터를 요청합니다");
+
+                if(IsOnline() == true)
+                    openApi.queryGetStationNamefromTM(tm_pt.x, tm_pt.y);
             }
         });
 
@@ -92,15 +112,29 @@ public class RealtimePage extends Fragment {
             @Override
             public void callbackGetAirDatafromStationName(String result) {
                 Log.d("linsoo","callbackGetAirDatafromStationName");
-                m_TextViewLog.setText(result);
+
+                addLogText(changeHtmlToPlainTxt(result));
                 xmlParseGetAirDatafromStationName(result);
             }
 
             @Override
             public void callbackGetStationNamefromTM(String result) {
                 Log.d("linsoo","callbackGetStationNamefromTM");
-                m_TextViewLog.setText(result);
+                addLogText(changeHtmlToPlainTxt(result));
                 xmlParseGetStationNamefromTM(result);
+            }
+
+            @Override
+            public void callbackError(String errReport) {
+                try{
+                    addLogText("query요청중 에러 발생...", Color.RED);
+                    addLogText("새로고침을 중지합니다...", Color.RED);
+                    addLogText( ("error="+errReport), Color.RED);
+                   // openApi.StopQuery();
+                }catch (Exception e) {
+                    Log.e("linsoo", "callbackError="+e.getMessage());
+
+                }
             }
         });
     }
@@ -126,7 +160,8 @@ public class RealtimePage extends Fragment {
 
     public void refreshData(){
         Log.d("linsoo", "refreshData");
-        m_TextViewLog.setText("현위치 검색중...");
+        clearLogText();
+        addLogText("현위치 검색중...", Color.BLUE);
         m_TextViewAddress.setText("");
         m_TextViewStationName.setText("");
         m_TextViewDataTime.setText("");
@@ -184,7 +219,7 @@ public class RealtimePage extends Fragment {
 
             xpp.setInput(new StringReader(data));
             int eventType = xpp.getEventType();
-            int pmValue = 0;
+
             while (eventType != XmlPullParser.END_DOCUMENT) {
                 switch (eventType){
                     case XmlPullParser.START_TAG:
@@ -249,7 +284,9 @@ public class RealtimePage extends Fragment {
                         if(foundStationName == PARSE_STATE_FOUND){
                             foundStationName = PARSE_STATE_DONE;
                             m_TextViewStationName.setText(xpp.getText());
-                            openApi.queryGetAirDatafromStationName(xpp.getText());
+
+                            if(IsOnline() == true)
+                                openApi.queryGetAirDatafromStationName(xpp.getText());
                         }
                         break;
 
@@ -260,4 +297,54 @@ public class RealtimePage extends Fragment {
             e.printStackTrace();
         }
     }
+
+    public boolean IsOnline(){
+        NetworkInfo activeNetwork = m_connectMNG.getActiveNetworkInfo();
+        if (activeNetwork != null) {
+            if (activeNetwork.getType() == ConnectivityManager.TYPE_WIFI && activeNetwork.isConnectedOrConnecting()) {
+                // wifi 연결중
+                return true;
+            } else if (activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE && activeNetwork.isConnectedOrConnecting()) {
+                // 모바일 네트워크 연결중
+                return true;
+            } else {
+                // 네트워크 오프라인 상태.
+                addLogText("네트워크가 연결되지 않았습니다.", Color.RED);
+                addLogText("새로고침을 종료합니다.", Color.RED);
+                return false;
+            }
+        }
+        else {
+            // 네트워크 null.. 모뎀이 없는 경우??
+            addLogText("네트워크가 존재하지 않습니다.", Color.RED);
+            addLogText("새로고침을 종료합니다.", Color.RED);
+            return false;
+        }
+    }
+
+    private void clearLogText(){
+        m_strLogText = "";
+        m_TextViewLog.setText(m_strLogText);
+    }
+    private void addLogText(String txt){
+        addLogText(txt, Color.BLACK);
+    }
+
+    private void addLogText(String txt, int rgb){
+        String tmpStr= String.format("%s<font color=\"#%03X\">%s</font><br/>", m_strLogText, (rgb& 0xFFFFFF), txt);
+        m_strLogText= tmpStr;
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                m_TextViewLog.setText( Html.fromHtml(m_strLogText));
+            }
+        });
+        Log.d("linsoo", "addLogText="+tmpStr);
+    }
+
+    private String changeHtmlToPlainTxt(String html){
+        String tmp = html.replace("<", "&lt;");
+        return tmp;
+    }
+
 }
