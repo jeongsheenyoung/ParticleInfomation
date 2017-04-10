@@ -1,26 +1,18 @@
 package kr.co.linsoo.particleinfomation;
 
-import android.content.Context;
 import android.graphics.Color;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.Html;
-import android.text.Spannable;
-import android.text.SpannableStringBuilder;
 import android.text.method.ScrollingMovementMethod;
-import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
-
 import java.io.StringReader;
 
 
@@ -29,23 +21,22 @@ public class RealtimePage extends Fragment {
     final int PARSE_STATE_FOUND = 1;
     final int PARSE_STATE_DONE = 2;
 
-    TextView m_TextViewLog = null;
-    TextView m_TextViewAddress = null;  //등록 위치 주소
-    TextView m_TextViewStationName = null;  //관측소 이름
-    TextView m_TextViewDataTime = null; //오염측정시각
-    TextView m_TextViewPM25 = null; //pm2.5
-    TextView m_TextViewPM25_24 = null; //pm2.5 (24시간)
-    TextView m_TextViewPM10 = null; //pm10
-    TextView m_TextViewPM10_24 = null; //pm10 (24시간)
-    linsooLocationMNG llMng = null;
-    OpenAPIQuery openApi = null;
-    GeoPoint in_pt = new GeoPoint(0, 0);
-    GeoPoint tm_pt = new GeoPoint(0, 0);
+    private TextView m_TextViewLog = null;
+    private TextView m_TextViewAddress = null;  //등록 위치 주소
+    private TextView m_TextViewStationName = null;  //관측소 이름
+    private TextView m_TextViewDataTime = null; //오염측정시각
+    private TextView m_TextViewPM25 = null; //pm2.5
+    private TextView m_TextViewPM25_24 = null; //pm2.5 (24시간)
+    private TextView m_TextViewPM10 = null; //pm10
+    private TextView m_TextViewPM10_24 = null; //pm10 (24시간)
+    private linsooLocationMNG llMng = null;
+    private OpenAPIQuery openApi = null;
+    private GeoPoint in_pt = new GeoPoint(0, 0);
+    private GeoPoint tm_pt = new GeoPoint(0, 0);
 
-    XmlPullParserFactory factory= null;
-    XmlPullParser xpp= null;
-    ConnectivityManager m_connectMNG = null;
-    private  String m_strLogText;
+    private XmlPullParserFactory factory= null;
+    private XmlPullParser xpp= null;
+    private String m_strLogText;
 
     @Override
     public void onPause(){
@@ -70,16 +61,12 @@ public class RealtimePage extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         try {
             factory = XmlPullParserFactory.newInstance();
             xpp = factory.newPullParser();
         } catch (XmlPullParserException e) {
             e.printStackTrace();
         }
-
-        m_connectMNG = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
-
 
         llMng = new linsooLocationMNG(getActivity(), new linsooLocationMNG.resultCallback() {
             @Override
@@ -101,40 +88,33 @@ public class RealtimePage extends Fragment {
                 addLogText( ("Address="+address) ,textColor);
 
                 addLogText("공공데이터 포털에서 미세먼지 데이터를 요청합니다");
-
-                if(IsOnline() == true)
-                    openApi.queryGetStationNamefromTM(tm_pt.x, tm_pt.y);
+                openApi.queryGetStationNamefromTM(tm_pt.x, tm_pt.y);
             }
         });
 
 
         openApi = new OpenAPIQuery(new OpenAPIQuery.resultCallback() {
             @Override
-            public void callbackGetAirDatafromStationName(String result) {
-                Log.d("linsoo","callbackGetAirDatafromStationName");
-
+            public void callbackOpenAPI_GetAirDatafromStationName(String result) {
+                Log.d("linsoo","callbackOpenAPI_GetAirDatafromStationName");
+                addLogText("========================================", Color.GREEN);
                 addLogText(changeHtmlToPlainTxt(result));
                 xmlParseGetAirDatafromStationName(result);
             }
 
             @Override
-            public void callbackGetStationNamefromTM(String result) {
-                Log.d("linsoo","callbackGetStationNamefromTM");
+            public void callbackOpenAPI_GetStationNamefromTM(String result) {
+                Log.d("linsoo","callbackOpenAPI_GetStationNamefromTM");
+                addLogText("========================================", Color.GREEN);
                 addLogText(changeHtmlToPlainTxt(result));
                 xmlParseGetStationNamefromTM(result);
             }
 
             @Override
-            public void callbackError(String errReport) {
-                try{
-                    addLogText("query요청중 에러 발생...", Color.RED);
-                    addLogText("새로고침을 중지합니다...", Color.RED);
-                    addLogText( ("error="+errReport), Color.RED);
-                   // openApi.StopQuery();
-                }catch (Exception e) {
-                    Log.e("linsoo", "callbackError="+e.getMessage());
-
-                }
+            public void callbackOpenAPI_Error(String errReport) {
+                Log.d("linsoo", "callbackOpenAPI_Error");
+                addLogText("새로고침을 중지합니다...", Color.RED);
+                addLogText("openAPI_Error="+errReport, Color.MAGENTA);
             }
         });
     }
@@ -162,6 +142,7 @@ public class RealtimePage extends Fragment {
         Log.d("linsoo", "refreshData");
         clearLogText();
         addLogText("현위치 검색중...", Color.BLUE);
+
         m_TextViewAddress.setText("");
         m_TextViewStationName.setText("");
         m_TextViewDataTime.setText("");
@@ -178,14 +159,10 @@ public class RealtimePage extends Fragment {
             openApi.StopQuery();
             llMng.EndFindLocation();
             llMng.StartFindLocation();
-
         }catch (Exception e){ Log.e("linsoo", "refreshData="+e.getMessage());      }
     }
 
-
-
     public  void setTextViewBackgroundColor(TextView view, String str){
-
         int pmValue = -1;
         try{
             pmValue = Integer.parseInt(str);
@@ -257,13 +234,10 @@ public class RealtimePage extends Fragment {
                             setTextViewBackgroundColor(m_TextViewPM10_24, xpp.getText());
                         }
                         break;
-
                 }
                 eventType = xpp.next();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception e) {  e.printStackTrace();   }
     }
 
     public void xmlParseGetStationNamefromTM(String data) {
@@ -284,12 +258,9 @@ public class RealtimePage extends Fragment {
                         if(foundStationName == PARSE_STATE_FOUND){
                             foundStationName = PARSE_STATE_DONE;
                             m_TextViewStationName.setText(xpp.getText());
-
-                            if(IsOnline() == true)
-                                openApi.queryGetAirDatafromStationName(xpp.getText());
+                            openApi.queryGetAirDatafromStationName(xpp.getText());
                         }
                         break;
-
                 }
                 eventType = xpp.next();
             }
@@ -298,33 +269,10 @@ public class RealtimePage extends Fragment {
         }
     }
 
-    public boolean IsOnline(){
-        NetworkInfo activeNetwork = m_connectMNG.getActiveNetworkInfo();
-        if (activeNetwork != null) {
-            if (activeNetwork.getType() == ConnectivityManager.TYPE_WIFI && activeNetwork.isConnectedOrConnecting()) {
-                // wifi 연결중
-                return true;
-            } else if (activeNetwork.getType() == ConnectivityManager.TYPE_MOBILE && activeNetwork.isConnectedOrConnecting()) {
-                // 모바일 네트워크 연결중
-                return true;
-            } else {
-                // 네트워크 오프라인 상태.
-                addLogText("네트워크가 연결되지 않았습니다.", Color.RED);
-                addLogText("새로고침을 종료합니다.", Color.RED);
-                return false;
-            }
-        }
-        else {
-            // 네트워크 null.. 모뎀이 없는 경우??
-            addLogText("네트워크가 존재하지 않습니다.", Color.RED);
-            addLogText("새로고침을 종료합니다.", Color.RED);
-            return false;
-        }
-    }
-
     private void clearLogText(){
         m_strLogText = "";
         m_TextViewLog.setText(m_strLogText);
+        m_TextViewLog.scrollTo(0,0);
     }
     private void addLogText(String txt){
         addLogText(txt, Color.BLACK);
